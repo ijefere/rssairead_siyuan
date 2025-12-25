@@ -11652,15 +11652,16 @@ async function playOpenAITTS(text, config, apiKey) {
 }
 async function createFeedBlock(parentDocId, url2, category = "", cron = DEFAULT_CRON) {
   const blockContent = `#### ${url2}`;
-  const { data } = await appendBlock({
+  const res2 = await appendBlock({
     parentID: parentDocId,
     dataType: "markdown",
     data: blockContent
   });
-  if (!data || !data[0] || !data[0].doOperations[0]) {
-    throw new Error("Failed to create feed block");
+  if (!res2 || !res2.data || !res2.data[0] || !res2.data[0].doOperations || !res2.data[0].doOperations[0]) {
+    console.error("appendBlock failed", res2);
+    throw new Error("Failed to create feed block (appendBlock returned unexpected structure)");
   }
-  const newBlockId = data[0].doOperations[0].id;
+  const newBlockId = res2.data[0].doOperations[0].id;
   const attrs = {
     "feed": url2,
     "cron": cron

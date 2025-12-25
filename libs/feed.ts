@@ -98,14 +98,23 @@ export async function parseFeed(feedDoc: feed): Promise<feedByUrl | Error> {
         responseEncoding: "text",
       },
       (res) => {
-        if (res.code !== 0 && res.data.status !== 200) {
-          j(new Error(res.msg));
-        } else {
-          r(res.data.body);
+        if (!res || res.code !== 0) {
+            console.error("forwardProxy error:", res);
+            j(new Error(res ? res.msg : "Unknown error from forwardProxy"));
+            return;
         }
+        if (res.data.status !== 200) {
+             console.error(`RSS Fetch failed. Status: ${res.data.status}. Body:`, res.data.body);
+             j(new Error(`Fetch failed with status ${res.data.status}: ${res.msg}`));
+             return;
+        }
+        r(res.data.body);
       },
     );
   });
+  
+  // console.log("RSS Response:", resText.substring(0, 200) + "..."); // Debug log
+
   const customCode = feedDoc.getAttr("customParse");
   if (customCode) {
     const customParseFun = eval(customCode) as customParse;
