@@ -1,0 +1,31 @@
+{
+  "name": "rssairead_siyuan",
+  "author": "飓风",
+  "url": "https://github.com/ijefere/rssairead_siyuan",
+  "version": "0.0.1",
+  "minAppVersion": "2.10.3",
+  "backends": [
+    "all"
+  ],
+  "frontends": [
+    "all"
+  ],
+  "displayName": {
+    "en_US": "RSS AI Read",
+    "zh_CN": "RSS AI 阅读助手"
+  },
+  "description": {
+    "en_US": "AI-powered RSS reader for SiYuan Note with auto-summarization and TTS.",
+    "zh_CN": "思源笔记的 AI 驱动 RSS 阅读器，支持自动摘要生成和语音播报。"
+  },
+  "readme": {
+    "en_US": "README.md",
+    "zh_CN": "README.md"
+  },
+  "funding": {
+    "custom": [
+      ""
+    ]
+  },
+  "disabledInPublish": true
+}
