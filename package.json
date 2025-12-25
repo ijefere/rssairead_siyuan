@@ -1,6 +1,6 @@
 {
   "name": "rssairead_siyuan",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "AI-powered RSS reader for SiYuan Note",
   "main": "index.js",
   "scripts": {

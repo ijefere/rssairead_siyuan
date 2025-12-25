@@ -35,72 +35,53 @@ const MAX_FEED_NUM = 100;
 const SUMMARY_LENGTH = 150;
 const DEFAULT_CRON = "1 * * * *";
 const FETCH_TIMEOUT = 1e4;
-async function request(url2, data) {
-  try {
-    const response = await fetch(url2, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
-    });
-    const text = await response.text();
-    if (!response.ok) {
-      throw new Error(`API Error ${url2} (${response.status}): ${text}`);
-    }
-    if (!text) {
-      console.warn(`API ${url2} returned empty response`);
-      return null;
-    }
-    try {
-      return JSON.parse(text);
-    } catch (e) {
-      console.error(`Failed to parse JSON from ${url2}:`, text);
-      throw new Error(`Invalid JSON response from ${url2}`);
-    }
-  } catch (e) {
-    console.error(`Request failed: ${url2}`, e);
-    throw e;
-  }
-}
 function insertBlock(par2) {
-  return request("/api/block/insertBlock", par2);
+  return siyuan.fetchSyncPost("/api/block/insertBlock", par2);
 }
 function prependBlock(par2) {
-  return request("/api/block/prependBlock", par2);
+  return siyuan.fetchSyncPost("/api/block/prependBlock", par2);
 }
 function appendBlock(par2) {
-  return request("/api/block/appendBlock", par2);
+  return siyuan.fetchSyncPost("/api/block/appendBlock", par2);
 }
 async function createDocWithMd(notebook, path, markdown) {
-  return request("/api/filetree/createDocWithMd", {
+  const res2 = await siyuan.fetchSyncPost("/api/filetree/createDocWithMd", {
     notebook,
     path,
     markdown
   });
+  if (typeof res2 === "string") {
+    try {
+      return JSON.parse(res2);
+    } catch (e) {
+      console.error("Failed to parse createDocWithMd response", res2);
+      throw e;
+    }
+  }
+  return res2;
 }
 function setBlockAttrs(id, attrs) {
-  return request("/api/attr/setBlockAttrs", {
+  return siyuan.fetchSyncPost("/api/attr/setBlockAttrs", {
     id,
     attrs
   });
 }
 function deleteBlock(id) {
-  return request("/api/block/deleteBlock", {
+  return siyuan.fetchSyncPost("/api/block/deleteBlock", {
     id
   });
 }
 function sqlQuery(stmt) {
-  return request("/api/query/sql", {
+  return siyuan.fetchSyncPost("/api/query/sql", {
     stmt
   });
 }
 async function getBlockByID(id) {
-  const response = await request("/api/block/getBlock", { id });
+  const response = await siyuan.fetchSyncPost("/api/block/getBlock", { id });
   return response.data;
 }
 function get_av_map(id) {
-  return request("/api/av/getAttributeViewKeys", {
+  return siyuan.fetchSyncPost("/api/av/getAttributeViewKeys", {
     id
   }).then((r) => r.data).then((r) => {
     return r.map((av) => {
@@ -121,6 +102,18 @@ function get_av_map(id) {
     }, {});
   });
 }
+const siyuan_api = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  __proto__: null,
+  appendBlock,
+  createDocWithMd,
+  deleteBlock,
+  getBlockByID,
+  get_av_map,
+  insertBlock,
+  prependBlock,
+  setBlockAttrs,
+  sqlQuery
+}, Symbol.toStringTag, { value: "Module" }));
 function getDefaultExportFromCjs(x) {
   return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
 }
@@ -11689,7 +11682,8 @@ async function ensureCategoryDoc(rootDocId, category) {
   throw new Error(`Failed to create category doc: ${category}`);
 }
 async function deleteFeedBlock(blockId) {
-  return deleteBlock(blockId);
+  const { deleteBlock: deleteBlock2 } = await Promise.resolve().then(() => siyuan_api);
+  return deleteBlock2(blockId);
 }
 function parseOpml(xmlContent) {
   const parser2 = new DOMParser();
@@ -11751,7 +11745,6 @@ class RssDock {
     this.plugin = plugin;
     this.element = document.createElement("div");
     this.element.classList.add("rss-dock");
-    console.log("Dock loaded v0.0.3");
     this.render();
   }
   async render() {

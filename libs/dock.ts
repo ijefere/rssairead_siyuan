@@ -10,6 +10,7 @@ export class RssDock {
         this.plugin = plugin;
         this.element = document.createElement("div");
         this.element.classList.add("rss-dock");
+        console.log("Dock loaded v0.0.3");
         this.render();
     }
 

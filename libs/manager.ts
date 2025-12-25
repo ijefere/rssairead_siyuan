@@ -1,4 +1,4 @@
-import { appendBlock, createDocWithMd, getBlockByID, lsNotebooks, setBlockAttrs, sqlQuery, attributes } from "./siyuan_api";
+import { appendBlock, createDocWithMd, getBlockByID, lsNotebooks, setBlockAttrs, sqlQuery, attributes, deleteBlock } from "./siyuan_api";
 import { DEFAULT_CRON } from "./const";
 
 export async function createFeedBlock(parentDocId: string, url: string, category: string = "", cron: string = DEFAULT_CRON) {
@@ -51,9 +51,10 @@ export async function ensureCategoryDoc(rootDocId: string, category: string): Pr
     const newPath = `${rootPath}/${category}.sy`;
     
     const createRes = await createDocWithMd(rootDoc.box, newPath, `# ${category}`);
-    if (createRes.data) {
+    if (createRes && createRes.data) {
         return createRes.data;
     }
+    console.error("createDocWithMd failed", createRes);
     throw new Error(`Failed to create category doc: ${category}`);
 }
 
@@ -69,6 +70,5 @@ export async function deleteFeedBlock(blockId: string) {
     
     // Actually, siyuan API deleteBlock deletes the block.
     // Let's use that.
-    const { deleteBlock } = await import("./siyuan_api");
     return deleteBlock(blockId);
 }

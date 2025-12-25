@@ -1,4 +1,38 @@
-import { IWebSocketData, fetchSyncPost } from "siyuan";
+import { IWebSocketData } from "siyuan";
+
+async function request(url: string, data: any): Promise<any> {
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+        });
+        
+        const text = await response.text();
+        
+        if (!response.ok) {
+            throw new Error(`API Error ${url} (${response.status}): ${text}`);
+        }
+
+        if (!text) {
+            // Empty response, maybe okay for some APIs, but usually returns JSON
+            console.warn(`API ${url} returned empty response`);
+            return null;
+        }
+
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error(`Failed to parse JSON from ${url}:`, text);
+            throw new Error(`Invalid JSON response from ${url}`);
+        }
+    } catch (e) {
+        console.error(`Request failed: ${url}`, e);
+        throw e;
+    }
+}
 
 export function insertBlock(par: {
   dataType: "markdown" | "dom";
@@ -9,7 +43,7 @@ export function insertBlock(par: {
   parentID?: string;
 }): Promise<IWebSocketData> {
   /** https://github.com/siyuan-note/siyuan/blob/master/API_zh_CN.md#%E6%8F%92%E5%85%A5%E5%9D%97 */
-  return fetchSyncPost("/api/block/insertBlock", par);
+  return request("/api/block/insertBlock", par);
 }
 
 export function prependBlock(par: {
@@ -17,7 +51,7 @@ export function prependBlock(par: {
     parentID: string;
     dataType: "markdown" | "dom";
 }): Promise<IWebSocketData> {
-    return fetchSyncPost("/api/block/prependBlock", par);
+    return request("/api/block/prependBlock", par);
 }
 
 export function appendBlock(par: {
@@ -25,11 +59,11 @@ export function appendBlock(par: {
     parentID: string;
     dataType: "markdown" | "dom";
 }): Promise<IWebSocketData> {
-    return fetchSyncPost("/api/block/appendBlock", par);
+    return request("/api/block/appendBlock", par);
 }
 
-export function createDocWithMd(notebook: string, path: string, markdown: string): Promise<IWebSocketData> {
-    return fetchSyncPost("/api/filetree/createDocWithMd", {
+export async function createDocWithMd(notebook: string, path: string, markdown: string): Promise<IWebSocketData> {
+    return request("/api/filetree/createDocWithMd", {
         notebook,
         path,
         markdown
@@ -37,14 +71,14 @@ export function createDocWithMd(notebook: string, path: string, markdown: string
 }
 
 export function setBlockAttrs(id: string, attrs: { [key: string]: string }): Promise<IWebSocketData> {
-    return fetchSyncPost("/api/attr/setBlockAttrs", {
+    return request("/api/attr/setBlockAttrs", {
         id,
         attrs
     });
 }
 
 export function deleteBlock(id: string): Promise<IWebSocketData> {
-    return fetchSyncPost("/api/block/deleteBlock", {
+    return request("/api/block/deleteBlock", {
         id
     });
 }
@@ -60,18 +94,18 @@ export interface attributes {
   value: "feed";
 }
 export function sqlQuery(stmt: string): Promise<IWebSocketData> {
-  return fetchSyncPost("/api/query/sql", {
+  return request("/api/query/sql", {
     stmt,
   });
 }
 
 export async function getBlockByID(id: string): Promise<any> {
-    const response = await fetchSyncPost("/api/block/getBlock", { id });
+    const response = await request("/api/block/getBlock", { id });
     return response.data;
 }
 
 export async function lsNotebooks(): Promise<any> {
-    const response = await fetchSyncPost("/api/notebook/lsNotebooks", {});
+    const response = await request("/api/notebook/lsNotebooks", {});
     return response.data;
 }
 
@@ -81,7 +115,7 @@ export async function lsNotebooks(): Promise<any> {
  * 然后排在前面的优先级高于后面的 */
 export function get_av_map(id: string) {
   /** https://github.com/siyuan-note/siyuan/blob/master/API_zh_CN.md#获取块属性 */
-  return fetchSyncPost("/api/av/getAttributeViewKeys", {
+  return request("/api/av/getAttributeViewKeys", {
     id,
   })
     .then((r) => r.data as database_av[])

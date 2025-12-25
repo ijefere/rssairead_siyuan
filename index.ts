@@ -38,7 +38,7 @@ export default class RssAiReadPlugin extends Plugin {
         config: {
             position: "Left",
             size: { width: 250, height: 0 },
-            icon: "iconRss",
+            icon: "iconFeed",
             title: "RSS AI Read",
         },
         data: {
@@ -51,9 +51,9 @@ export default class RssAiReadPlugin extends Plugin {
     });
 
     this.addCommand({
-      hotkey: '',
       langKey: '_feedFetch',
       langText: '立刻对所有feed进行一次拉取',
+      hotkey: '',
       callback: async () => {
         await this.registerAllFeed();
         this._feedFetch.forEach((feedFetch) => feedFetch());
@@ -63,6 +63,7 @@ export default class RssAiReadPlugin extends Plugin {
     this.addCommand({
         langKey: 'generateSummary',
         langText: '生成今日摘要 (Generate Summary)',
+        hotkey: '',
         callback: async () => {
             await this.generateAndSaveSummary();
         }
