@@ -2,7 +2,7 @@
   "name": "rssairead_siyuan",
   "author": "飓风",
   "url": "https://github.com/ijefere/rssairead_siyuan",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "minAppVersion": "2.10.3",
   "backends": [
     "all"

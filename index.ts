@@ -8,6 +8,7 @@ import { generateSummary } from './libs/llm';
 import { playText } from './libs/tts';
 import { createFeedBlock, ensureCategoryDoc, deleteFeedBlock } from './libs/manager';
 import { parseOpml, flattenOpml } from './libs/opml';
+import { RssDock } from './libs/dock';
 
 // 引入这个变量后 vite 会自动注入 hot
 import.meta.hot;
@@ -18,6 +19,7 @@ export default class RssAiReadPlugin extends Plugin {
   config: IPluginConfig = DEFAULT_CONFIG;
   // Cache for feeds list in settings
   currentFeeds: any[] = [];
+  rssDock: RssDock;
 
   async onload() {
     // Load config
@@ -29,6 +31,24 @@ export default class RssAiReadPlugin extends Plugin {
             summary: { ...DEFAULT_CONFIG.summary, ...(loadedData.summary || {}) }
         };
     }
+
+    // Register Dock
+    this.rssDock = new RssDock(this);
+    this.addDock({
+        config: {
+            position: "Left",
+            size: { width: 250, height: 0 },
+            icon: "iconRss",
+            title: "RSS AI Read",
+        },
+        data: {
+            text: "RSS AI Read"
+        },
+        type: "rss-ai-read-dock",
+        init: () => {
+            return this.rssDock.element;
+        }
+    });
 
     this.addCommand({
       hotkey: '',

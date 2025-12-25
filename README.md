@@ -40,11 +40,11 @@
 * 插件会自动在父文档下创建名为 `Tech.sy`, `Finance.sy` 的子文档。
 * 同一领域的 RSS 更新会被聚合到同一个文档中，生成的 AI 摘要也会按领域分组。
 
-### 5. ⚡ 自动化与兼容性
-
-* **定时任务**: 通过 Cron 表达式（如 `0 8 * * *`）全自动运行拉取和摘要生成。
-* **广泛兼容**: 内置 `rss-parser`，完美支持 RSS 0.9/1.0/2.0, Atom, JSON Feed 等多种格式。
-* **智能去重**: 自动通过链接识别已存文章，避免重复内容。
+### 6. 📌 侧边栏停靠 (Dock)
+插件提供了一个常驻侧边栏的面板，支持**钉住**，方便随时进行操作。
+*   **快速操作**: 提供“一键拉取所有更新”和“生成 AI 摘要”的快捷入口。
+*   **快速订阅**: 直接在侧边栏输入 URL 订阅新源。
+*   **订阅列表**: 实时查看和管理已添加的 RSS 源。
 
 ---
 
@@ -120,7 +120,7 @@ A: 浏览器原生语音取决于你的操作系统（Windows/macOS）安装的�
 
 如果你发现了 Bug 或有新功能建议，欢迎联系我！
 
-*   **GitHub**: [https://github.com/ijefere/rssairead_siyuan](https://github.com/ijefere/rssairead_siyuan)
+* **GitHub**: [https://github.com/ijefere/rssairead_siyuan](https://github.com/ijefere/rssairead_siyuan)
 * **联系方式**: 2550792838@qq.com
 
 ## 📄 许可证
