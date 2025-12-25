@@ -4,17 +4,19 @@ import { DEFAULT_CRON } from "./const";
 export async function createFeedBlock(parentDocId: string, url: string, category: string = "", cron: string = DEFAULT_CRON) {
     // 1. Create a header block for the feed
     const blockContent = `#### ${url}`; // Ideally we fetch title first, but URL is safe
-    const { data } = await appendBlock({
+    const res = await appendBlock({
         parentID: parentDocId,
         dataType: "markdown",
         data: blockContent
     });
     
-    if (!data || !data[0] || !data[0].doOperations[0]) {
-        throw new Error("Failed to create feed block");
+    // Safety check for response structure
+    if (!res || !res.data || !res.data[0] || !res.data[0].doOperations || !res.data[0].doOperations[0]) {
+        console.error("appendBlock failed", res);
+        throw new Error("Failed to create feed block (appendBlock returned unexpected structure)");
     }
 
-    const newBlockId = data[0].doOperations[0].id;
+    const newBlockId = res.data[0].doOperations[0].id;
 
     // 2. Set attributes
     const attrs: { [key: string]: string } = {
