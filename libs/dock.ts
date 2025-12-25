@@ -1,6 +1,6 @@
 import { Plugin, fetchPost } from "siyuan";
 import { getAllFeedBlocks, parseFeedBlock } from "./feed";
-import { createFeedBlock, ensureCategoryDoc, deleteFeedBlock } from "./manager";
+import { createFeedDoc, ensureCategoryDoc, deleteFeedBlock } from "./manager";
 
 export class RssDock {
     private plugin: Plugin;
@@ -184,8 +184,16 @@ export class RssDock {
             try {
                 fetchPost('/api/notification/pushMsg', { msg: "Adding feed..." });
                 const catName = cat || "Uncategorized";
+                // We don't need ensureCategoryDoc if we just want to put it under the parent directly
+                // But the user might want categories.
+                // Let's assume pid is the Folder/Doc where feeds go.
+                // If cat is provided, we might want to put it in a sub-doc?
+                // The current implementation of ensureCategoryDoc creates a sub-doc.
+                // If the user wants flat structure, they can provide the target parent directly.
+                // Let's keep the category logic for now.
                 const targetDocId = await ensureCategoryDoc(pid, catName);
-                await createFeedBlock(targetDocId, url, catName);
+                
+                await createFeedDoc(targetDocId, url, catName);
                 fetchPost('/api/notification/pushMsg', { msg: "Feed added successfully" });
                 
                 // Clear inputs

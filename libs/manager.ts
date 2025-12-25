@@ -1,24 +1,26 @@
 import { appendBlock, createDocWithMd, getBlockByID, lsNotebooks, setBlockAttrs, sqlQuery, attributes, deleteBlock } from "./siyuan_api";
 import { DEFAULT_CRON } from "./const";
 
-export async function createFeedBlock(parentDocId: string, url: string, category: string = "", cron: string = DEFAULT_CRON) {
-    // 1. Create a header block for the feed
-    const blockContent = `#### ${url}`; // Ideally we fetch title first, but URL is safe
-    const res = await appendBlock({
-        parentID: parentDocId,
-        dataType: "markdown",
-        data: blockContent
-    });
+export async function createFeedDoc(parentDocId: string, url: string, category: string = "", cron: string = DEFAULT_CRON) {
+    // 1. Get parent doc info to construct path
+    const parentDoc = await getBlockByID(parentDocId);
+    if (!parentDoc) throw new Error("Parent doc not found");
+
+    // 2. Create new doc for the feed
+    // We use the URL as temporary title, it will be updated later
+    const docTitle = url.replace(/[:/\\?%*|"<>]/g, "_"); // Sanitize title
+    const parentPath = parentDoc.path.replace(/\.sy$/, "");
+    const newPath = `${parentPath}/${docTitle}.sy`;
     
-    // Safety check for response structure
-    if (!res || !res.data || !res.data[0] || !res.data[0].doOperations || !res.data[0].doOperations[0]) {
-        console.error("appendBlock failed", res);
-        throw new Error("Failed to create feed block (appendBlock returned unexpected structure)");
+    const createRes = await createDocWithMd(parentDoc.box, newPath, `# ${url}`);
+    if (!createRes || !createRes.data) {
+        console.error("createDocWithMd failed", createRes);
+        throw new Error("Failed to create feed document");
     }
 
-    const newBlockId = res.data[0].doOperations[0].id;
+    const newDocId = createRes.data;
 
-    // 2. Set attributes
+    // 3. Set attributes on the document itself
     const attrs: { [key: string]: string } = {
         "feed": url,
         "cron": cron
@@ -27,8 +29,8 @@ export async function createFeedBlock(parentDocId: string, url: string, category
         attrs["category"] = category;
     }
 
-    await setBlockAttrs(newBlockId, attrs);
-    return newBlockId;
+    await setBlockAttrs(newDocId, attrs);
+    return newDocId;
 }
 
 export async function ensureCategoryDoc(rootDocId: string, category: string): Promise<string> {

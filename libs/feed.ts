@@ -160,7 +160,10 @@ export async function parseFeedBlock(block_id: string) {
     },
   };
 
-  /** 寻找一个以 feed: 开头的子块。它将作为此 feed 的属性块，对它的子块进行解析，获取各种属性 */
+  // 1. Get attributes directly from the document properties (av_attr)
+  Object.assign(feedObj.av_attr, await get_av_map(block_id));
+
+  // 2. Fallback: Check if there's a legacy feed attribute block (for compatibility)
   const feedAttrBlock = (
     await sqlQuery(
       `SELECT * FROM blocks WHERE parent_id="${block_id}" and fcontent LIKE 'feed:%' limit 1`,
@@ -174,18 +177,17 @@ export async function parseFeedBlock(block_id: string) {
     Object.assign(feedObj.attr, blocksToObj(feedAttrChildBlock));
   }
 
-  // 查找所有entry子块
+  // 3. Find all entry blocks (children of the doc)
+  // We query for h4-h6 headers that look like RSS entries, or list items
   feedObj.entryBlock = (
     await sqlQuery(
       `SELECT * FROM blocks
       WHERE
-       parent_id="${block_id}" AND (markdown LIKE "* [ ] #%" OR markdown LIKE "* [X] #%")
+       parent_id="${block_id}" AND (markdown LIKE "* [ ] #%" OR markdown LIKE "* [X] #%" OR type="h")
       ORDER BY created DESC
       LIMIT ${/** 避免笔记本中存在但没搜到，导致重复插入 */ MAX_FEED_NUM * 3}`,
     )
   ).data as block[];
-  Object.assign(feedObj.av_attr, await get_av_map(block_id));
-
 
   return feedObj;
 
@@ -210,8 +212,10 @@ export async function parseFeedBlock(block_id: string) {
     return obj as feed;
   }
 }
+
 export async function getAllFeedBlocks() {
-  return (await sqlQuery(`SELECT * FROM attributes WHERE name="bookmark" and value="feed"`))
+  // Query for documents (type='d') that have the attribute 'feed'
+  return (await sqlQuery(`SELECT * FROM attributes WHERE name="feed" OR (name="bookmark" and value="feed")`))
     .data as attributes[];
 }
 function elText(el: Element | Document, selectors: string) {

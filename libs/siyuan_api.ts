@@ -101,6 +101,10 @@ export function sqlQuery(stmt: string): Promise<IWebSocketData> {
 
 export async function getBlockByID(id: string): Promise<any> {
     const response = await request("/api/block/getBlock", { id });
+    if (!response || !response.data) {
+        console.warn(`getBlockByID: Block not found or API error for id ${id}`, response);
+        return null; // Return null instead of throwing, let caller handle
+    }
     return response.data;
 }
 

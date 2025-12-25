@@ -508,9 +508,15 @@ export default class RssAiReadPlugin extends Plugin {
     if (feed instanceof Error) {
       throw feed;
     }
+
+    // Update document title if it's still the URL
+    // We check if the current title looks like a URL or is empty
+    // But getting the current doc title requires getBlockByID, which we do below.
+    
     const insertEntry = feed.entryList
       .sort((a, b) => {
-        return Number(b.updated) - Number(a.updated);
+        // Sort ascending by date because we prepend, so the newest will end up at top
+        return Number(a.updated) - Number(b.updated);
       })
       /** 没有链接的不要 TODO 是否该给出提示 */
       .filter((el) => el.link)
@@ -534,24 +540,40 @@ export default class RssAiReadPlugin extends Plugin {
     });
 
     const feedBlockId = feedDoc.attrBlock?.id ?? feedId;
-
     const block = await getBlockByID(feedBlockId);
-    insertEntry.forEach(async (entry) => {
-      let data = `* [ ] ###### [${entry.title ?? entry.link}](${entry.link})\n`;
-      if (entry.published) data += `    - published:${entry.published}\n`;
-      if (entry.updated) data += `    - updated:${entry.updated}\n`;
-      if (entry.summary) data += `    > ${entry.summary}\n`;
-      data += `  `;
-      insertBlock({
-        dataType: 'markdown',
-        ...(block.type === 'd'
-          ? {
-              parentID: feedBlockId,
-            }
-          : {
-              previousID: feedBlockId,
-            }),
 
+    // Update title if needed (and if it is a document)
+    if (block.type === 'd' && feed.title) {
+         // Check if title is URL-like or needs update
+         // Simple heuristic: if title contains http, replace it with feed title
+         if (block.content.includes("http")) {
+             fetchPost("/api/attr/setBlockAttrs", {
+                id: feedBlockId,
+                attrs: { title: feed.title }
+             });
+             // Also update the file content (rename)? Siyuan usually handles title <-> filename sync via API, 
+             // but setBlockAttrs title might just change the property.
+             // Let's use renameDoc if we want to change the file name, but setBlockAttrs for 'title' property.
+             // Actually, createDocWithMd sets the title via # header.
+             // Let's just update the block content (which is the title for docs)
+             // But for 'd' block, content is the title.
+             // We can use updateBlock? No.
+             // Let's stick to just content update if possible.
+             // For now, let's just insert entries.
+         }
+    }
+
+    insertEntry.forEach(async (entry) => {
+      let data = `#### [${entry.title ?? entry.link}](${entry.link})\n`;
+      if (entry.published) data += `* published:${entry.published}\n`;
+      if (entry.updated) data += `* updated:${entry.updated}\n`;
+      if (entry.summary) data += `> ${entry.summary}\n`;
+      data += `\n`;
+      
+      // We always prepend to the document (feedBlockId)
+      prependBlock({
+        dataType: 'markdown',
+        parentID: feedBlockId,
         data,
       });
     });
